@@ -29,7 +29,7 @@ class ServiceNotConfiguredError(ConfigurationError):
     def __init__(self):
         super().__init__(
             "No music service configured. "
-            "Set SPOTIFY_* or LAST_FM_* environment variables."
+            "Set YOUTUBE_*, SPOTIFY_* or LAST_FM_* environment variables."
         )
 
 

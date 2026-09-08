@@ -59,6 +59,22 @@ class LastFmConfig:
         return bool(self.api_key and self.username)
 
 
+@dataclass(frozen=True)
+class YouTubeConfig:
+    """YouTube Data API configuration."""
+
+    client_id: str = field(default_factory=lambda: os.getenv("YOUTUBE_CLIENT_ID", ""))
+    client_secret: str = field(default_factory=lambda: os.getenv("YOUTUBE_CLIENT_SECRET", ""))
+    refresh_token: str = field(default_factory=lambda: os.getenv("YOUTUBE_REFRESH_TOKEN", ""))
+
+    token_url: str = "https://oauth2.googleapis.com/token"
+    api_url: str = "https://www.googleapis.com/youtube/v3"
+
+    def is_configured(self) -> bool:
+        """Check if all required YouTube OAuth values are set."""
+        return bool(self.client_id and self.client_secret and self.refresh_token)
+
+
 # Valid background types
 BACKGROUND_TYPES = frozenset({"color", "blur_dark", "blur_light"})
 
@@ -282,6 +298,7 @@ def validate_background_type(bg_type: str, default: str) -> str:
 
 # Global config instances (immutable)
 spotify_config = SpotifyConfig()
+youtube_config = YouTubeConfig()
 lastfm_config = LastFmConfig()
 svg_config = SVGConfig()
 compact_svg_config = CompactSVGConfig()

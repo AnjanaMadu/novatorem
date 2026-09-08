@@ -1,8 +1,9 @@
 # Set Up
 
-This project supports two music services: **Spotify** and **Last.fm**. You only need to configure one of them.
+This project supports three music services: **YouTube**, **Spotify**, and **Last.fm**. You only need to configure one of them.
 
-- If **both** are configured, Spotify takes priority.
+- If multiple services are configured, YouTube takes priority, then Spotify, then Last.fm.
+- YouTube mode shows the newest liked video categorized by YouTube as **Music**. It does not read current playback.
 - If only **Spotify** is configured, Spotify will be used.
 - If only **Last.fm** is configured, Last.fm will be used.
 
@@ -23,7 +24,27 @@ Press **Ctrl+C** to stop the server. Pass `--no-open` to skip opening the browse
 
 ---
 
-## Option 1: Spotify API (Recommended)
+## Option 1: YouTube Data API
+
+This option uses Google's official YouTube Data API and OAuth 2.0. It scans the authenticated account's Likes playlist and selects the newest item with YouTube category `10` (Music). Regular liked videos are skipped.
+
+### Google Cloud setup
+
+1. Create or select a project in [Google Cloud Console](https://console.cloud.google.com/).
+2. Enable **YouTube Data API v3**.
+3. Configure the OAuth consent screen.
+4. Create an OAuth client ID for a desktop application and save the client ID and client secret.
+5. Authorize the account with the `https://www.googleapis.com/auth/youtube.readonly` scope and obtain a refresh token.
+6. Set these environment variables:
+  - `YOUTUBE_CLIENT_ID`
+  - `YOUTUBE_CLIENT_SECRET`
+  - `YOUTUBE_REFRESH_TOKEN`
+
+The refresh token is a server secret. Do not put it in browser JavaScript, the SVG, or a public repository. The widget links to `music.youtube.com` and never attempts to read YouTube Music's private playback state.
+
+---
+
+## Option 2: Spotify API (Recommended)
 
 ### Spotify API App
 
@@ -81,7 +102,7 @@ curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -H "Authorizat
 
 ---
 
-## Option 2: Last.fm API
+## Option 3: Last.fm API
 
 Last.fm is a simpler alternative that doesn't require OAuth setup. It only requires an API key and username.
 
@@ -127,6 +148,11 @@ You'll need these two environment variables:
     - `SPOTIFY_REFRESH_TOKEN`
     - `SPOTIFY_CLIENT_ID`
     - `SPOTIFY_SECRET_ID`
+
+  **For YouTube:**
+    - `YOUTUBE_CLIENT_ID`
+    - `YOUTUBE_CLIENT_SECRET`
+    - `YOUTUBE_REFRESH_TOKEN`
   
   **For Last.fm:**
     - `LAST_FM_API_KEY`

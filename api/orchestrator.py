@@ -1,7 +1,7 @@
 """
 Orchestrator module - handles the main Flask app, routing, and SVG generation.
 
-Abstracts away the core functionality from the music service providers (Spotify, Last.fm).
+Abstracts away the core functionality from the music service providers (YouTube, Spotify, Last.fm).
 """
 
 from __future__ import annotations
@@ -456,9 +456,12 @@ def make_svg(
         bar_palette=bar_palette,
     )
 
-    # Set status text based on playing state
+    # Set status text based on playing state or provider-specific state
     is_playing = track_data.get("is_playing", False)
-    status = "Vibing to:" if is_playing else "Recently played:"
+    status = track_data.get(
+        "status",
+        "Vibing to:" if is_playing else "Recently played:",
+    )
 
     # Calculate marquee params from raw text (before XML escaping)
     raw_song = track_data.get("track_name", "Unknown Track")
@@ -539,8 +542,8 @@ def get_active_service() -> Tuple[str, Any]:
     """
     Determine which music service to use based on environment variables.
     
-    Returns 'spotify' if Spotify is configured, 'lastfm' if Last.fm is configured.
-    Defaults to Spotify if both are configured.
+    Returns 'youtube' if YouTube is configured, then Spotify, then Last.fm.
+    YouTube takes priority when multiple services are configured.
     
     Returns:
         Tuple of (service_name, service_module)
@@ -549,9 +552,11 @@ def get_active_service() -> Tuple[str, Any]:
         ServiceNotConfiguredError: If no service is configured
     """
     # Import here to avoid circular imports
-    from . import lastfm, spotify
+    from . import lastfm, spotify, youtube
 
-    if spotify.is_configured():
+    if youtube.is_configured():
+        return ("youtube", youtube)
+    elif spotify.is_configured():
         return ("spotify", spotify)
     elif lastfm.is_configured():
         return ("lastfm", lastfm)
