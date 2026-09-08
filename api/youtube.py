@@ -137,7 +137,9 @@ def _find_music_video(playlist_id: str) -> Optional[TrackInfo]:
                 channel_id = snippet.get("channelId", "")
                 return TrackInfo(
                     track_name=snippet.get("title", "Unknown Track"),
-                    artist_name=snippet.get("channelTitle", "Unknown Artist"),
+                    artist_name=snippet.get("channelTitle", "Unknown Artist").removesuffix(
+                        " - Topic"
+                    ),
                     album_art_url=snippet.get("thumbnails", {}).get("high", {}).get(
                         "url",
                         snippet.get("thumbnails", {}).get("default", {}).get("url", ""),

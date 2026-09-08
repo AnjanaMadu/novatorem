@@ -21,9 +21,9 @@ def _database_url() -> str:
 
 def _ttl() -> int:
     try:
-        return max(1, int(os.getenv("YOUTUBE_CACHE_TTL_SECONDS", "60")))
+        return max(1, int(os.getenv("YOUTUBE_CACHE_TTL_SECONDS", "3600")))
     except ValueError:
-        return 60
+        return 3600
 
 
 def _ensure_table(connection: Any) -> None:
