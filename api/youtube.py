@@ -9,6 +9,7 @@ from typing import Any, Optional
 import requests
 
 from .config import youtube_config
+from .cache import get_json, set_json
 from .exceptions import APIError, AuthenticationError, NoTracksError
 
 
@@ -156,11 +157,15 @@ def _find_music_video(playlist_id: str) -> Optional[TrackInfo]:
 
 def get_now_playing() -> dict[str, Any]:
     """Return the newest liked video in YouTube's Music category."""
+    cached_track = get_json("youtube:music-liked")
+    if cached_track is not None:
+        return cached_track
+
     track = _find_music_video(_get_likes_playlist_id())
     if track is None:
         raise NoTracksError("YouTube music likes")
 
-    return {
+    track_data = {
         "is_playing": False,
         "status": "Recently liked:",
         "track_name": track.track_name,
@@ -171,3 +176,5 @@ def get_now_playing() -> dict[str, Any]:
         "artist_url": track.artist_url,
         "audio_features": None,
     }
+    set_json("youtube:music-liked", track_data)
+    return track_data

@@ -631,7 +631,9 @@ def catch_all(path: str) -> Response:
     svg = make_svg(track_data, background_color, border_color, background_type, show_status, is_compact)
 
     resp = Response(svg, mimetype="image/svg+xml")
-    resp.headers["Cache-Control"] = "s-maxage=1"
+    resp.headers["Cache-Control"] = (
+        "public, s-maxage=60, stale-while-revalidate=300"
+    )
 
     return resp
 
