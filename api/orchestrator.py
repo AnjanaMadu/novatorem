@@ -20,7 +20,7 @@ from base64 import b64encode
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from colorthief import ColorThief
 from flask import Flask, Response, render_template, request, redirect
-from PIL import Image
+from PIL import Image, ImageStat
 
 from .config import (
     ColorPalette,
@@ -65,11 +65,7 @@ class ImageData:
                 response = requests.get(self.url, timeout=10, verify=False)
                 response.raise_for_status()
                 image = Image.open(BytesIO(response.content))
-                width, height = image.size
-                crop_size = min(width, height)
-                left = (width - crop_size) // 2
-                top = (height - crop_size) // 2
-                square_image = image.crop((left, top, left + crop_size, top + crop_size))
+                square_image = self._crop_to_square_art(image)
 
                 output = BytesIO()
                 square_image.save(output, format="PNG")
@@ -79,6 +75,39 @@ class ImageData:
             except Exception as e:
                 raise ImageProcessingError(str(e)) from e
         return self._bytes
+
+    @staticmethod
+    def _crop_to_square_art(image: Image.Image) -> Image.Image:
+        """Remove uniform thumbnail padding, then center-crop the artwork square."""
+        rgb_image = image.convert("RGB")
+        width, height = rgb_image.size
+
+        row_variance = [
+            sum(ImageStat.Stat(rgb_image.crop((0, y, width, y + 1))).var)
+            for y in range(height)
+        ]
+        column_variance = [
+            sum(ImageStat.Stat(rgb_image.crop((x, 0, x + 1, height))).var)
+            for x in range(width)
+        ]
+
+        row_threshold = max(1.0, max(row_variance) * 0.08)
+        column_threshold = max(1.0, max(column_variance) * 0.08)
+        active_rows = [index for index, value in enumerate(row_variance) if value > row_threshold]
+        active_columns = [
+            index for index, value in enumerate(column_variance) if value > column_threshold
+        ]
+
+        if active_rows and active_columns:
+            rgb_image = rgb_image.crop(
+                (active_columns[0], active_rows[0], active_columns[-1] + 1, active_rows[-1] + 1)
+            )
+
+        width, height = rgb_image.size
+        crop_size = min(width, height)
+        left = (width - crop_size) // 2
+        top = (height - crop_size) // 2
+        return rgb_image.crop((left, top, left + crop_size, top + crop_size))
 
     def get_base64(self) -> str:
         """Get image as base64 encoded string."""
