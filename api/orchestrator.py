@@ -20,6 +20,7 @@ from base64 import b64encode
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from colorthief import ColorThief
 from flask import Flask, Response, render_template, request, redirect
+from PIL import Image
 
 from .config import (
     ColorPalette,
@@ -63,8 +64,19 @@ class ImageData:
             try:
                 response = requests.get(self.url, timeout=10, verify=False)
                 response.raise_for_status()
-                self._bytes = response.content
+                image = Image.open(BytesIO(response.content))
+                width, height = image.size
+                crop_size = min(width, height)
+                left = (width - crop_size) // 2
+                top = (height - crop_size) // 2
+                square_image = image.crop((left, top, left + crop_size, top + crop_size))
+
+                output = BytesIO()
+                square_image.save(output, format="PNG")
+                self._bytes = output.getvalue()
             except requests.RequestException as e:
+                raise ImageProcessingError(str(e)) from e
+            except Exception as e:
                 raise ImageProcessingError(str(e)) from e
         return self._bytes
 
